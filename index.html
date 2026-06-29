@@ -36,6 +36,7 @@ a{color:var(--accent)}
 
 <div class="panel" id="p-overview">
   <div class="grid kpis" id="kpis"></div>
+  <div class="grid"><div class="card" style="border-left:3px solid var(--accent)"><h3>Coach's read</h3><div id="read-ov"></div></div></div>
   <div class="grid two">
     <div class="card full"><h3>Weight trend (daily + 7-day average)</h3><canvas id="cWeight" height="110"></canvas></div>
     <div class="card"><h3>Targets scorecard</h3><table id="scorecard"></table></div>
@@ -44,6 +45,7 @@ a{color:var(--accent)}
 </div>
 
 <div class="panel" id="p-recovery">
+  <div class="grid"><div class="card" style="border-left:3px solid var(--accent)"><h3>Coach's read</h3><div id="read-rec"></div></div></div>
   <div class="grid two">
     <div class="card full"><h3>Sleep - stages &amp; score</h3><canvas id="cSleep" height="120"></canvas></div>
     <div class="card"><h3>HRV &amp; resting HR</h3><canvas id="cHrv" height="150"></canvas></div>
@@ -54,6 +56,7 @@ a{color:var(--accent)}
 </div>
 
 <div class="panel" id="p-training">
+  <div class="grid"><div class="card" style="border-left:3px solid var(--accent)"><h3>Coach's read</h3><div id="read-tr"></div></div></div>
   <div class="grid two">
     <div class="card full"><h3>Training volume <span class="seg" id="volSeg"><button data-v="weekly" class="on">Weekly</button><button data-v="daily">Daily</button></span></h3><canvas id="cVol" height="110"></canvas>
       <div class="note">Garmin auto-captures these; weights/volume are approximate. Session frequency is the reliable signal. Heavy top sets need manual logging.</div></div>
@@ -64,6 +67,7 @@ a{color:var(--accent)}
 </div>
 
 <div class="panel" id="p-nutrition">
+  <div class="grid"><div class="card" style="border-left:3px solid var(--accent)"><h3>Coach's read</h3><div id="read-nu"></div></div></div>
   <div class="grid kpis" id="nutriKpis"></div>
   <div class="card"><h3>Energy expenditure (calories burned / day)</h3><canvas id="cCal" height="120"></canvas></div>
   <div class="grid" id="nutri"></div>
@@ -94,7 +98,8 @@ $("tabs").innerHTML=TABS.map((t,i)=>`<button class="tab${i?'':' on'}" data-t="${
 $("p-overview").classList.add('on');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));$("p-"+b.dataset.t).classList.add('on');});
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));$("p-"+b.dataset.t).classList.add('on');
+  window.dispatchEvent(new Event('resize'));});
 
 const w=DATA.weight,comp=DATA.composition,last=comp[comp.length-1],T=DATA.labs.targets;
 const rate=w.weekly_rate,tgt=w.target_rate;
@@ -180,4 +185,16 @@ $("suppNote").textContent=DATA.supp_note;
 const G=DATA.guidance;
 $("guide").innerHTML=G.items.map(i=>`<div class="card"><h3>${i[0]}</h3><div>${i[1]}</div></div>`).join('');
 $("bot").textContent=G.bottom_line;
+function cavg(key,n){const v=col(key).filter(x=>x!=null).slice(-(n||7));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;}
+let _ov=[];
+if(rate!=null){if(DATA.phase==='bulk'&&rate-tgt>0.2)_ov.push(`Weight's climbing ~${rate.toFixed(2)} kg/wk vs your +${tgt} target - too fast, and your last scan shows the gain is fat, not muscle. Trim the surplus ~300-400 kcal.`);else if(rate<0&&DATA.phase==='bulk')_ov.push(`You're losing weight during a bulk - check your intake.`);else _ov.push(`Weight trend ${rate>0?'+':''}${rate.toFixed(2)} kg/wk is close to your +${tgt} target - good.`);}
+_ov.push(`Body fat ${last.bf}% vs ${DATA.targets.bf_goal.join('-')}% goal means ~${fatToLose} kg of fat to shed for the lean look. August bloods in ${days(DATA.targets.aug_gate)} days are the decision gate.`);
+$("read-ov").innerHTML=_ov.join(' ');
+const _hrv=cavg('hrv_overnight'),_rhr=cavg('resting_hr'),_slp=cavg('sleep_hours');
+let _rv=[];
+if(_hrv&&_rhr)_rv.push(`Recovery looks ${_hrv>70&&_rhr<55?'strong':'okay'} - HRV ~${Math.round(_hrv)} ms, resting HR ~${Math.round(_rhr)}.`);
+if(_slp)_rv.push(`Sleep averages ${_slp.toFixed(1)} h${_slp<7?' - short; tightening this is your biggest recovery win.':' - solid.'}`);
+$("read-rec").innerHTML=_rv.join(' ')||'Recovery data will populate as you sync.';
+$("read-tr").innerHTML=`${DATA.training.sessions?DATA.training.sessions+' sessions in the window':'High session frequency'} - that consistency is a real strength. Through the cut, hold intensity on the main lifts and trim accessory volume on low-recovery days. Real strength/PR tracking needs manual top-set logging - ask me to switch it on.`;
+$("read-nu").innerHTML=_maint?`Your body burns ~${_maint} kcal/day on average. For the cut that's ~${_maint-500} kcal in; protein at 240 g is the muscle-protecting priority, and high fibre + low saturated fat is your ApoB lever.`:`Protein 240 g and the ApoB-focused food swaps are the priorities; calorie targets calibrate as more days sync.`;
 </script></body></html>
