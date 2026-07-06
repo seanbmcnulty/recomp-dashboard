@@ -117,7 +117,7 @@ $("p-overview").classList.add('on');
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));$("p-"+b.dataset.t).classList.add('on');
-  window.dispatchEvent(new Event('resize'));});
+  setTimeout(function(){document.querySelectorAll('canvas').forEach(function(cv){var c=Chart.getChart(cv);if(c){try{c.resize();}catch(e){}}});},40);});
 
 const w=DATA.weight,comp=DATA.composition,last=comp[comp.length-1],T=DATA.labs.targets;
 const rate=w.weekly_rate,tgt=w.target_rate;
