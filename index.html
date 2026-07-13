@@ -243,6 +243,7 @@ const D=DATA.daily, lbl=D.map(d=>d.date.slice(5));
 const col=k=>D.map(d=>d[k]==null?null:d[k]);
 function L(label,key,color,axis){return{label:label,data:col(key),borderColor:color,backgroundColor:'transparent',borderWidth:2,tension:.3,yAxisID:axis||'y'};}
 function line(id,sets,opts){new Chart($(id),{type:'line',data:{labels:lbl,datasets:sets},options:Object.assign({spanGaps:true,plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:0}}},opts||{})});}
+function mov(a,w){return a.map((_,i)=>{const s=a.slice(Math.max(0,i-w+1),i+1).filter(v=>v!=null);return s.length?+(s.reduce((x,y)=>x+y,0)/s.length).toFixed(1):null;});}
 
 $("phase").textContent=DATA.phase;
 $("sub").textContent="Updated "+DATA.generated+"  -  goal: reveal a lean, muscular physique by cutting fat (the gap is fat, not muscle)";
@@ -295,15 +296,16 @@ new Chart($("cSleep"),{data:{labels:lbl,datasets:[
  {type:'bar',label:'deep',data:col('sleep_deep_h'),backgroundColor:'#0a3069',stack:'s'},
  {type:'bar',label:'light',data:col('sleep_light_h'),backgroundColor:'#54aeff',stack:'s'},
  {type:'bar',label:'REM',data:col('sleep_rem_h'),backgroundColor:'#8250df',stack:'s'},
- {type:'line',label:'score',data:col('sleep_score'),borderColor:C.warn,borderWidth:2,tension:.3,pointRadius:0,yAxisID:'y1'}]},
+ {type:'line',label:'score',data:col('sleep_score'),borderColor:C.warn,borderWidth:2,tension:.3,pointRadius:0,yAxisID:'y1'},
+ {type:'line',label:'6h target',data:lbl.map(()=>6),borderColor:C.bad,borderWidth:1,borderDash:[5,5],pointRadius:0,yAxisID:'y'}]},
  options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{stacked:true,title:{display:true,text:'hours'}},y1:{position:'right',grid:{drawOnChartArea:false},suggestedMax:100}}}});
-line('cHrv',[L('HRV (ms)','hrv_overnight',C.good,'y'),L('resting HR','resting_hr',C.bad,'y1')],
+line('cHrv',[L('HRV (ms)','hrv_overnight',C.line,'y'),{label:'HRV 7-day avg',data:mov(col('hrv_overnight'),7),borderColor:C.good,borderWidth:2.5,tension:.3,pointRadius:0,yAxisID:'y'},L('resting HR','resting_hr',C.bad,'y1')],
  {scales:{y:{position:'left'},y1:{position:'right',grid:{drawOnChartArea:false}}}});
 line('cBb',[L('Body Battery high','body_battery_high',C.good,'y'),L('stress avg','stress_avg',C.warn,'y1')],
  {scales:{y:{position:'left'},y1:{position:'right',grid:{drawOnChartArea:false}}}});
 line('cSpo2',[L('SpO2 %','spo2_avg',C.acc,'y'),L('respiration','respiration_avg',C.mut,'y1')],
  {scales:{y:{position:'left',suggestedMin:90,suggestedMax:100},y1:{position:'right',grid:{drawOnChartArea:false}}}});
-line('cReady',[L('readiness','training_readiness',C.acc,'y')],{scales:{y:{suggestedMin:0,suggestedMax:100}}});
+line('cReady',[L('readiness','training_readiness',C.line,'y'),{label:'7-day avg',data:mov(col('training_readiness'),7),borderColor:C.acc,borderWidth:2.5,tension:.3,pointRadius:0,yAxisID:'y'}],{scales:{y:{suggestedMin:0,suggestedMax:100}}});
 
 let volChart;
 function drawVol(mode){
@@ -311,7 +313,8 @@ function drawVol(mode){
  let labels,data;
  if(mode==='weekly'){labels=DATA.training.weekly_volume.map(p=>p.week.slice(5));data=DATA.training.weekly_volume.map(p=>p.vol);}
  else{const r=DATA.training.recent_sessions;labels=r.map(s=>s.date.slice(5));data=r.map(s=>s.volume_kg);}
- volChart=new Chart($("cVol"),{type:'bar',data:{labels:labels,datasets:[{label:'volume (kg)',data:data,backgroundColor:C.acc}]},options:{plugins:{legend:{display:false}}}});
+ const _vma=data.map((_,i)=>{const s=data.slice(Math.max(0,i-3),i+1).filter(v=>v!=null);return s.length?Math.round(s.reduce((x,y)=>x+y,0)/s.length):null;});
+ volChart=new Chart($("cVol"),{data:{labels:labels,datasets:[{type:'bar',label:'volume (kg)',data:data,backgroundColor:C.acc},{type:'line',label:'4-pt avg',data:_vma,borderColor:C.warn,borderWidth:2,tension:.3,pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}}}});
 }
 drawVol('weekly');
 document.querySelectorAll('#volSeg button').forEach(b=>b.onclick=()=>{
@@ -456,8 +459,8 @@ const LH=DATA.labs_history||[];
 if(LH.length){
  const ld=LH.map(x=>x.date);
  const lset=(lb,k,c)=>({label:lb,data:LH.map(x=>x[k]==null?null:x[k]),borderColor:c,backgroundColor:'transparent',borderWidth:2,tension:.3,spanGaps:true});
- new Chart($("cLipids"),{type:'line',data:{labels:ld,datasets:[lset('LDL','ldl',C.bad),lset('ApoB','apob',C.warn),lset('HDL','hdl',C.good),lset('Triglycerides','trig',C.mut)]},options:{plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:3}}}});
- new Chart($("cBP"),{type:'line',data:{labels:ld,datasets:[lset('systolic','bp_sys',C.bad),lset('diastolic','bp_dia',C.acc)]},options:{plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:3}}}});
+ new Chart($("cLipids"),{type:'line',data:{labels:ld,datasets:[lset('LDL','ldl',C.bad),lset('ApoB','apob',C.warn),lset('HDL','hdl',C.good),lset('Triglycerides','trig',C.mut),{label:'LDL target 3.4',data:ld.map(()=>3.4),borderColor:C.bad,borderWidth:1,borderDash:[5,5],pointRadius:0},{label:'ApoB target 1.0',data:ld.map(()=>1),borderColor:C.warn,borderWidth:1,borderDash:[6,4],pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:3}}}});
+ new Chart($("cBP"),{type:'line',data:{labels:ld,datasets:[lset('systolic','bp_sys',C.bad),lset('diastolic','bp_dia',C.acc),{label:'target 135',data:ld.map(()=>135),borderColor:C.mut,borderWidth:1,borderDash:[5,5],pointRadius:0},{label:'target 85',data:ld.map(()=>85),borderColor:C.mut,borderWidth:1,borderDash:[6,4],pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:3}}}});
  new Chart($("cTest"),{type:'line',data:{labels:ld,datasets:[lset('testosterone (nmol/L)','testosterone',C.acc)]},options:{plugins:{legend:{display:false}},elements:{point:{radius:3}}}});
  new Chart($("cEGFR"),{type:'line',data:{labels:ld,datasets:[lset('eGFR','egfr',C.acc),{label:'optimal >=90',data:ld.map(()=>90),borderColor:C.good,borderWidth:1,borderDash:[5,5],pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}},elements:{point:{radius:3}},scales:{y:{suggestedMin:60,suggestedMax:100}}}});
  const lx=LH[LH.length-1];
