@@ -384,7 +384,7 @@ if(FH.bp_weekly&&FH.bp_weekly.length){
  if($("decadeBPnote"))$("decadeBPnote").textContent='Logged BP (Google Fit), weekly average '+(FH.bp_range?('('+FH.bp_range[0]+' onward)'):'')+'. Home target under 135/85 (dashed); post-exercise readings can inflate some weeks.';
 }
 if(FH.cycling_weekly&&FH.cycling_weekly.length){
- new Chart($("cDecadeCyc"),{type:'bar',data:{labels:FH.cycling_weekly.map(x=>x.date),datasets:[{label:'cycling min/week',data:FH.cycling_weekly.map(x=>x.min),backgroundColor:C.acc}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'min / week'}}}}});
+ new Chart($("cDecadeCyc"),{type:'bar',data:{labels:FH.cycling_weekly.map(x=>x.date),datasets:[{label:'cycling h/week',data:FH.cycling_weekly.map(x=>+(x.min/60).toFixed(1)),backgroundColor:C.acc}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'hours / week'}}}}});
  if($("decadeCycnote"))$("decadeCycnote").textContent='Weekly cycling time (Google Fit) '+(FH.cycling_range?('('+FH.cycling_range[0]+' onward)'):'')+'. The CSV logs cycling time, not cycling-specific distance.';
 }else if($("decadeCycnote")){$("decadeCycnote").textContent='No cycling time was logged in the Google Fit data.';}
 if(FH.cal_weekly&&FH.cal_weekly.length){
