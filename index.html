@@ -356,11 +356,13 @@ const FH=DATA.fitbit||{};
 if(FH.weight_weekly&&FH.weight_weekly.length){
  const _cw=(DATA.composition||[]).map(c=>({date:c.date,kg:c.weight}));
  const _allW=FH.weight_weekly.concat(_cw).sort((a,b)=>a.date<b.date?-1:1);
- new Chart($("cDecadeW"),{type:'line',data:{labels:_allW.map(x=>x.date),datasets:[{label:'weight (kg)',data:_allW.map(x=>x.kg),borderColor:C.acc,borderWidth:2,tension:.25,pointRadius:0,spanGaps:true}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'kg'}}}}});
+ new Chart($("cDecadeW"),{type:'line',data:{labels:_allW.map(x=>x.date),datasets:[{label:'weight (kg)',data:_allW.map(x=>x.kg),borderColor:C.acc,borderWidth:2,tension:.25,pointRadius:0,spanGaps:true},{label:'target 104 kg',data:_allW.map(()=>104),borderColor:C.good,borderWidth:1,borderDash:[6,4],pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'kg'}}}}});
  if($("decadeWnote"))$("decadeWnote").textContent='Weekly weigh-ins from your Fitbit Aria scale ('+(FH.weight_range?FH.weight_range[0]:'')+' onward) joined to your recent Evolt scans.';
 }else if($("decadeWnote")){$("decadeWnote").textContent='Run import_fitbit.py to load your Fitbit weight history, then publish.';}
 if(FH.steps_weekly&&FH.steps_weekly.length){
- new Chart($("cDecadeS"),{type:'line',data:{labels:FH.steps_weekly.map(x=>x.date),datasets:[{label:'daily steps',data:FH.steps_weekly.map(x=>x.steps),borderColor:C.good,borderWidth:2,tension:.25,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'steps/day'}}}}});
+ const _st=FH.steps_weekly.map(x=>x.steps);
+ const _stma=_st.map((_,i)=>{const s=_st.slice(Math.max(0,i-7),i+1);return Math.round(s.reduce((a,b)=>a+b,0)/s.length);});
+ new Chart($("cDecadeS"),{data:{labels:FH.steps_weekly.map(x=>x.date),datasets:[{type:'line',label:'weekly steps',data:_st,borderColor:C.line,borderWidth:1,pointRadius:0,tension:.3},{type:'line',label:'8-week average',data:_stma,borderColor:C.good,borderWidth:2.5,pointRadius:0,tension:.3}]},options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'steps/day'}}}}});
  if($("decadeSnote"))$("decadeSnote").textContent='Google Fit daily steps, weekly average '+(FH.steps_range?('('+FH.steps_range[0]+' onward)'):'')+'.';
 }else if($("decadeSnote")){$("decadeSnote").textContent='Add "Daily activity metrics.csv" and re-run import_fitbit.py for the steps trend.';}
 let _hr=((FH.hrlow_weekly&&FH.hrlow_weekly.length)?FH.hrlow_weekly:(FH.rhr_weekly||[])).map(x=>({date:x.date,bpm:x.bpm}));
@@ -384,11 +386,15 @@ if(FH.bp_weekly&&FH.bp_weekly.length){
  if($("decadeBPnote"))$("decadeBPnote").textContent='Logged BP (Google Fit), weekly average '+(FH.bp_range?('('+FH.bp_range[0]+' onward)'):'')+'. Home target under 135/85 (dashed); post-exercise readings can inflate some weeks.';
 }
 if(FH.cycling_weekly&&FH.cycling_weekly.length){
- new Chart($("cDecadeCyc"),{type:'bar',data:{labels:FH.cycling_weekly.map(x=>x.date),datasets:[{label:'cycling h/week',data:FH.cycling_weekly.map(x=>+(x.min/60).toFixed(1)),backgroundColor:C.acc}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'hours / week'}}}}});
- if($("decadeCycnote"))$("decadeCycnote").textContent='Weekly cycling time (Google Fit) '+(FH.cycling_range?('('+FH.cycling_range[0]+' onward)'):'')+'. The CSV logs cycling time, not cycling-specific distance.';
+ const _cyh=FH.cycling_weekly.map(x=>+(x.min/60).toFixed(1));
+ const _cyma=_cyh.map((_,i)=>{const s=_cyh.slice(Math.max(0,i-7),i+1);return +(s.reduce((a,b)=>a+b,0)/s.length).toFixed(1);});
+ new Chart($("cDecadeCyc"),{data:{labels:FH.cycling_weekly.map(x=>x.date),datasets:[{type:'bar',label:'cycling h/week',data:_cyh,backgroundColor:C.acc},{type:'line',label:'8-week average',data:_cyma,borderColor:C.warn,borderWidth:2,tension:.3,pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'hours / week'}}}}});
+ if($("decadeCycnote"))$("decadeCycnote").textContent='Weekly cycling hours (Google Fit) '+(FH.cycling_range?('('+FH.cycling_range[0]+' onward)'):'')+'; line = 8-week average. The CSV logs cycling time, not cycling-specific distance.';
 }else if($("decadeCycnote")){$("decadeCycnote").textContent='No cycling time was logged in the Google Fit data.';}
 if(FH.cal_weekly&&FH.cal_weekly.length){
- new Chart($("cDecadeCal"),{type:'line',data:{labels:FH.cal_weekly.map(x=>x.date),datasets:[{label:'kcal/day',data:FH.cal_weekly.map(x=>x.kcal),borderColor:C.warn,borderWidth:2,tension:.25,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'kcal/day'}}}}});
+ const _cal=FH.cal_weekly.map(x=>x.kcal);
+ const _calma=_cal.map((_,i)=>{const s=_cal.slice(Math.max(0,i-7),i+1);return Math.round(s.reduce((a,b)=>a+b,0)/s.length);});
+ new Chart($("cDecadeCal"),{data:{labels:FH.cal_weekly.map(x=>x.date),datasets:[{type:'line',label:'kcal/day',data:_cal,borderColor:C.line,borderWidth:1,pointRadius:0,tension:.3},{type:'line',label:'8-week average',data:_calma,borderColor:C.warn,borderWidth:2.5,pointRadius:0,tension:.3}]},options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'kcal/day'}}}}});
  if($("decadeCalnote"))$("decadeCalnote").textContent='Daily energy burned (Google Fit), weekly average '+(FH.cal_range?('('+FH.cal_range[0]+' onward)'):'')+'. Useful context for the weight steps: did expenditure rise or fall as weight climbed?';
 }
 let _fl=[];
