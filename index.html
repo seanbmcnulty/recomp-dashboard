@@ -5,28 +5,34 @@
 <title>Sean McNulty - Recomp Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#f6f8fa;--card:#fff;--line:#d8dee4;--txt:#1f2328;--mut:#656d76;
---accent:#0969da;--good:#1a7f37;--warn:#9a6700;--bad:#cf222e}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);
-font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;padding:22px;max-width:1080px;margin:auto}
-h1{font-size:21px;margin:0}.sub{color:var(--mut);font-size:13px;margin-top:3px}
-.badge{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;padding:2px 11px;font-size:11px;font-weight:700;text-transform:uppercase;vertical-align:middle}
-.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 4px;border-bottom:1px solid var(--line)}
-.tab{background:none;border:none;padding:9px 14px;font:inherit;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent}
+:root{--bg:#f5f9f8;--card:#ffffff;--line:#d7e3df;--txt:#16211d;--mut:#5b6b66;
+--accent:#0e8a72;--good:#1a7f37;--warn:#9a6700;--bad:#cf222e;
+--mono:ui-monospace,'SF Mono',Menlo,'Cascadia Mono',Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;color:var(--txt);background-color:#f5f9f8;
+background-image:linear-gradient(rgba(14,138,114,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(14,138,114,.06) 1px,transparent 1px);background-size:18px 18px;
+font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;padding:22px;max-width:1120px;margin:auto}
+h1{font-size:20px;margin:0;letter-spacing:.3px}
+.sub{color:var(--mut);font-size:12px;margin-top:3px;font-family:var(--mono)}
+.badge{display:inline-block;background:var(--accent);color:#fff;border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;vertical-align:middle;font-family:var(--mono)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:18px 0 4px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:none;padding:9px 13px;font:inherit;font-weight:600;font-size:13px;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.3px}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
 .panel{display:none}.panel.on{display:block}
 .grid{display:grid;gap:14px;margin-top:14px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .two{grid-template-columns:repeat(2,1fr)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px}
-.card h3{margin:0 0 9px;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
-.kpi .v{font-size:25px;font-weight:700}.kpi .l{font-size:12px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:15px;box-shadow:0 1px 2px rgba(14,138,114,.05)}
+.card h3{margin:0 0 10px;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);font-weight:700}
+.card h3::before{content:"\25C8  ";opacity:.7}
+.kpi .v{font-size:25px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px}
+.kpi .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
 .full{grid-column:1/-1}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-table{width:100%;border-collapse:collapse;font-size:14px}td{padding:6px 4px;border-bottom:1px solid var(--line)}
-td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-.note{color:var(--mut);font-size:12px;margin-top:7px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}td{padding:6px 4px;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.note{color:var(--mut);font-size:12px;margin-top:8px;line-height:1.55}
 ul{margin:6px 0;padding-left:18px}li{margin:5px 0}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:11px;font-family:var(--mono)}
 .seg button{background:var(--card);border:none;padding:5px 11px;cursor:pointer;font:inherit;color:var(--mut)}
 .seg button.on{background:var(--accent);color:#fff}
 a{color:var(--accent)}
