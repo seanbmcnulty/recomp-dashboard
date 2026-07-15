@@ -452,7 +452,7 @@ $("stdnote").innerHTML=`At ${_bw} kg bodyweight, from your logged max weights (t
 (function(){
  const MS=DATA.training.muscle_sets||[];if(!MS.length){if($("muscleNote"))$("muscleNote").textContent='Sync a few strength sessions to see weekly set volume per muscle.';return;}
  const _band=v=>v<5?C.bad:(v<10?C.warn:(v<=20?C.good:C.warn));
- new Chart($("cMuscle"),{data:{labels:MS.map(m=>m.muscle),datasets:[{label:'sets / week',data:MS.map(m=>m.sets_wk),backgroundColor:MS.map(m=>_band(m.sets_wk))}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:c=>{const v=c.parsed.y;return v<5?'under-dosed (<5)':(v<10?'maintenance (5-9)':(v<=20?'growth zone (10-20)':'very high (>20)'));}}}},scales:{y:{title:{display:true,text:'sets / week'},suggestedMax:20}}}});
+ new Chart($("cMuscle"),{type:'bar',data:{labels:MS.map(m=>m.muscle),datasets:[{label:'sets / week',data:MS.map(m=>m.sets_wk),backgroundColor:MS.map(m=>_band(m.sets_wk))}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:c=>{const v=c.parsed.y;return v<5?'under-dosed (<5)':(v<10?'maintenance (5-9)':(v<=20?'growth zone (10-20)':'very high (>20)'));}}}},scales:{y:{title:{display:true,text:'sets / week'},suggestedMax:20}}}});
  const _lo=MS.filter(m=>m.sets_wk<5).map(m=>m.muscle),_ok=MS.filter(m=>m.sets_wk>=10&&m.sets_wk<=20).map(m=>m.muscle);
  $("muscleNote").innerHTML='<b>How to read it:</b> ~10&ndash;20 hard sets/muscle/week drives growth; ~5&ndash;9 maintains it on a cut; under ~5 risks losing it. '+
   (_lo.length?('<span class="warn">Under-dosed: '+_lo.join(', ')+'.</span> '):'')+
