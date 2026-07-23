@@ -312,6 +312,13 @@ table{display:block;overflow-x:auto;white-space:nowrap}}
     <div class="card full"><h3>Daily macros (g) &mdash; protein / carbs / fat</h3><canvas id="cInMacroBar" height="120"></canvas></div>
   </div>
   <div class="grid"><div class="card full"><h3>Meal log &mdash; recent days</h3><div id="mealLog"></div><div class="note" id="mealLogNote"></div></div></div>
+  <h3 style="margin:18px 4px 6px">Fasting &amp; meal timing &mdash; your 16:8 window</h3>
+  <div class="grid kpis" id="fastKpis"></div>
+  <div class="note" id="fastEmpty" style="margin:-2px 0 6px"></div>
+  <div class="grid two" id="fastCharts">
+    <div class="card full"><h3>Eating window &mdash; first to last meal</h3><canvas id="cFastWin" height="120"></canvas><div class="note" id="cFastWinNote"></div></div>
+    <div class="card full"><h3>Eating window length vs 8h target</h3><canvas id="cFastLen" height="110"></canvas><div class="note">Under 8 hours = holding 16:8. The window closing by 8pm is what re-imposes your calorie cap.</div></div>
+  </div>
   <h3 style="margin:18px 4px 6px">Diet quality &mdash; your ApoB &amp; blood-pressure levers</h3>
   <div class="note" id="dietEmpty" style="margin:-2px 0 6px"></div>
   <div class="grid two" id="dietCharts">
@@ -592,6 +599,45 @@ new Chart($("cCal"),{data:{labels:lbl,datasets:[{type:'bar',label:'total burned'
    return `<div class="card" style="flex:1 1 240px;min-width:240px;max-width:360px"><h3 style="margin:0 0 2px">${d}</h3><div class="sub" style="margin-bottom:6px">${Math.round(k)} kcal &middot; ${Math.round(p)}g protein &middot; ${ms.length} meal${ms.length!==1?'s':''}</div>${rows}</div>`;
  }).join('')+'</div>';
  const n=$("mealLogNote"); if(n)n.textContent='Each logged meal with its estimate, newest days first. The description carries the assumptions behind each number.';
+})();
+/* ---- Fasting / eating-window (derived from meal times) ---- */
+(function(){
+ const M=DATA.meals||[];
+ const hrOf=t=>{const m=String(t||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1]+(+m[2])/60):null;};
+ const byDay={};
+ M.forEach(m=>{const h=hrOf(m.time); if(h==null)return; (byDay[m.date]=byDay[m.date]||[]).push(h);});
+ const days=Object.keys(byDay).sort();
+ const fe=$("fastEmpty"), fc=$("fastCharts");
+ if(!days.length){ if(fe)fe.textContent='Log meals with times and your eating-window / fasting charts appear here.'; if(fc)fc.style.display='none'; return; }
+ const lab=days.map(d=>d.slice(5));
+ const firsts=days.map(d=>Math.min.apply(null,byDay[d])), lasts=days.map(d=>Math.max.apply(null,byDay[d]));
+ const win=days.map((d,i)=>+(lasts[i]-firsts[i]).toFixed(1));
+ const li=days.length-1;
+ const fmt=h=>{const H=Math.floor(h),Mn=Math.round((h-H)*60);return (H%12||12)+':'+String(Mn).padStart(2,'0')+(H<12?'am':'pm');};
+ const kk=$("fastKpis");
+ if(kk){
+   const inWin=firsts[li]>=12&&lasts[li]<=20;
+   kk.innerHTML=kpi(win[li].toFixed(1)+' h','eating window (target <=8h)',win[li]>8.2?'warn':'good')
+     +kpi((24-win[li]).toFixed(1)+' h','fasted that day (target >=16h)',(24-win[li])<16?'warn':'good')
+     +kpi(fmt(firsts[li]),'first meal (target >= noon)',firsts[li]<11.9?'warn':'good')
+     +kpi(fmt(lasts[li]),'last meal (target <= 8pm)',lasts[li]>20.1?'warn':'good')
+     +kpi(inWin?'yes':'no','inside noon-8pm window',inWin?'good':'warn');
+ }
+ const refPlugin={id:'refs',afterDatasetsDraw(chart){
+   const cfg=(chart.options.plugins||{}).refs; if(!cfg)return;
+   const ctx=chart.ctx, area=chart.chartArea, sx=chart.scales.x, sy=chart.scales.y; if(!area)return;
+   (cfg.v||[]).forEach(l=>{const x=sx.getPixelForValue(l.value);if(x<area.left-1||x>area.right+1)return;ctx.save();ctx.beginPath();ctx.setLineDash(l.dash||[5,4]);ctx.lineWidth=1.5;ctx.strokeStyle=l.color||C.good;ctx.moveTo(x,area.top);ctx.lineTo(x,area.bottom);ctx.stroke();if(l.label){ctx.setLineDash([]);ctx.fillStyle=l.color||C.good;ctx.font='10px inherit';ctx.textAlign='center';ctx.fillText(l.label,x,area.top-2);}ctx.restore();});
+   (cfg.h||[]).forEach(l=>{const y=sy.getPixelForValue(l.value);if(y<area.top-1||y>area.bottom+1)return;ctx.save();ctx.beginPath();ctx.setLineDash(l.dash||[6,4]);ctx.lineWidth=2;ctx.strokeStyle=l.color||C.good;ctx.moveTo(area.left,y);ctx.lineTo(area.right,y);ctx.stroke();if(l.label){ctx.setLineDash([]);ctx.fillStyle=l.color||C.good;ctx.font='10px inherit';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(l.label,area.right-4,y-2);}ctx.restore();});
+ }};
+ new Chart($("cFastWin"),{type:'bar',plugins:[refPlugin],
+   data:{labels:lab,datasets:[{label:'eating window',data:days.map((d,i)=>[firsts[i],lasts[i]]),backgroundColor:days.map((d,i)=>(firsts[i]>=12&&lasts[i]<=20)?C.good:C.warn),borderRadius:4,barThickness:14}]},
+   options:{indexAxis:'y',plugins:{legend:{display:false},refs:{v:[{value:12,color:C.good,label:'noon'},{value:20,color:C.good,label:'8pm'}]}},
+     scales:{x:{min:5,max:24,ticks:{stepSize:2,callback:v=>((v%12)||12)+(v<12?'a':'p')}},y:{}}}});
+ const wn=$("cFastWinNote"); if(wn)wn.textContent='Each bar spans first-to-last meal. Green = inside the noon-8pm window; dashed lines are the window edges.';
+ new Chart($("cFastLen"),{type:'bar',plugins:[refPlugin],
+   data:{labels:lab,datasets:[{label:'eating window h',data:win,backgroundColor:win.map(v=>v>8.2?C.warn:C.good)}]},
+   options:{plugins:{legend:{display:false},refs:{h:[{value:8,color:C.good,label:'8h target'}]}},
+     scales:{y:{beginAtZero:true,suggestedMax:Math.max(10,Math.max.apply(null,win)*1.15)}}}});
 })();
 $("supps").innerHTML='<table>'+DATA.supplements.map(s=>`<tr><td style="text-align:left;vertical-align:top;width:38%"><b>${s[0]}</b><div class="note" style="margin:3px 0 0">${s[1]}</div></td><td style="text-align:left;vertical-align:top">${s[2]}</td></tr>`).join('')+'</table>';
 $("suppNote").textContent=DATA.supp_note;
