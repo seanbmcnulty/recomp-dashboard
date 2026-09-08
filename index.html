@@ -1025,7 +1025,7 @@ if(rate!=null&&DATA.phase==='cut'&&rate-tgt>0.3)_fl.push(['warn',`7-day trend ${
 if(_slp!=null&&_slp<6.5)_fl.push(['warn',`Sleep averaging ${_slp.toFixed(1)} h - under-recovering.`]);
 if(DATA.labs.apob>T.apob)_fl.push(['bad',`ApoB ${DATA.labs.apob} above target ${T.apob} - the cardiovascular risk to manage.`]);
 if(DATA.labs.bp_sys>T.bp_sys)_fl.push(['warn',`Blood pressure ${DATA.labs.bp_sys}/${DATA.labs.bp_dia} above home target.`]);
-const _aug=days(DATA.targets.aug_gate);if(_aug>=0&&_aug<=45)_fl.push(['warn',`Bloods (postponed to early 2027) in ${_aug} days - book them.`]);
+const _aug=days(DATA.targets.aug_gate);if(_aug>=0&&_aug<=45)_fl.push(['warn',`ATA Medical health screening in ${_aug} days (16 Sep) — skip hard training the morning of bloods.`]);
 $("flags").innerHTML=_fl.length?_fl.map(f=>`<div class="${f[0]}">&bull; ${f[1]}</div>`).join(''):'<div class="good">&bull; No red flags right now.</div>';
 function _wow(k){const v=col(k).filter(x=>x!=null);if(v.length<14)return null;const a=v.slice(-7),b=v.slice(-14,-7);return a.reduce((x,y)=>x+y,0)/a.length-b.reduce((x,y)=>x+y,0)/b.length;}
 function _wrow(lb,k,u,dir){const d=_wow(k);if(d==null)return `<tr><td>${lb}</td><td style="color:var(--mut)">not enough data</td></tr>`;let c='';if(dir){const good=dir>0?d>0:d<0;c=Math.abs(d)<0.05?'':(good?'good':'warn');}return `<tr><td>${lb}</td><td class="${c}">${d>0?'+':''}${d.toFixed(1)} ${u}</td></tr>`;}
