@@ -1238,14 +1238,23 @@ if(CP.length){
  (function(){
   const CB=(DATA.calibration||{}).bf, box=$("cCalibBF"), note=$("calibNote"), kp=$("calibKpis");
   if(!CB||!CB.daily||!CB.daily.length){ if(note)note.textContent='Calibrated daily body fat appears once your Garmin scale has logged body-fat readings alongside at least one Evolt scan.'; return; }
-  const cal=CB.cal, dd=CB.daily.map(x=>x.date), lab=dd.map(d=>d.slice(5));
+  const cal=CB.cal;
+  // Union daily Garmin dates with every Evolt scan date so a same-day scan without a
+  // scale reading (common after evening gym/sauna) still gets a red dot on the chart.
+  const dateSet={}; (CB.daily||[]).forEach(x=>{ if(x.date) dateSet[x.date]=1; });
+  (CB.evolt||[]).forEach(p=>{ if(p.date) dateSet[p.date]=1; });
+  const dd=Object.keys(dateSet).sort();
+  const lab=dd.map(d=>d.slice(5));
+  const calBy={}, rawBy={}; (CB.daily||[]).forEach(x=>{ calBy[x.date]=x.cal; rawBy[x.date]=x.raw; });
   const ev={}; (CB.evolt||[]).forEach(p=>ev[p.date]=p.v);
+  const calData=dd.map(d=>calBy[d]!=null?calBy[d]:null);
+  const rawData=dd.map(d=>rawBy[d]!=null?rawBy[d]:null);
   const evPts=dd.map(d=>ev[d]!=null?ev[d]:null);
   new Chart(box,{data:{labels:lab,datasets:[
-    {type:'line',label:'calibrated daily BF%',data:CB.daily.map(x=>x.cal),borderColor:C.acc,borderWidth:2.5,tension:.3,pointRadius:0},
-    {type:'line',label:'raw Garmin BF%',data:CB.daily.map(x=>x.raw),borderColor:C.mut,borderWidth:1,borderDash:[3,3],tension:.3,pointRadius:0},
+    {type:'line',label:'calibrated daily BF%',data:calData,borderColor:C.acc,borderWidth:2.5,tension:.3,pointRadius:0,spanGaps:true},
+    {type:'line',label:'raw Garmin BF%',data:rawData,borderColor:C.mut,borderWidth:1,borderDash:[3,3],tension:.3,pointRadius:0,spanGaps:true},
     {type:'line',label:'Evolt scan',data:evPts,showLine:false,pointRadius:evPts.map(v=>v==null?0:5),pointBackgroundColor:C.bad,borderColor:C.bad}
-  ]},options:{plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'body fat %'}}}}});
+  ]},options:{spanGaps:true,plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{title:{display:true,text:'body fat %'}}}}});
   const M=(DATA.calibration||{}).muscle, last=CB.latest;
   if(kp)kp.innerHTML=kpi((last?last.cal:'-')+'%','today (Garmin, calibrated)','')
     +kpi((cal.offset>=0?'+':'')+cal.offset+' pts','Garmin→Evolt offset','')
